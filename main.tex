@@ -1,0 +1,398 @@
+%define document type
+\documentclass[12pt,fleqn]{report}
+
+%use European style
+\usepackage[a4paper,left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+
+%few useful packages
+\usepackage{ccfonts}
+\usepackage[T1]{fontenc}
+\usepackage{setspace}
+\let\Tiny=\tiny %remove annoying warnings
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=black}
+\usepackage{amsmath}
+\usepackage{rotating}
+\usepackage{lipsum}
+\usepackage{adjustbox}
+\usepackage{multicol}
+\usepackage{longtable}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{eurosym}
+\usepackage{graphicx}
+\usepackage{chngpage}
+\usepackage{fancyhdr}
+\usepackage{fancyvrb}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{dcolumn}
+%define environment for code
+\definecolor{orangepse}{RGB}{240,139,39}
+\definecolor{redpse}{RGB}{222,6,61}
+\newcommand{\rpse}[1]{\textcolor{redpse}{#1}}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tblr,
+  language=R,
+  aboveskip=5mm,
+  belowskip=5mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+% This is the beginning of the document
+\begin{document}
+\cfoot{}
+
+\thispagestyle{fancy}
+\lhead{NAME: Palingwende Clovis Privat\\SURNAME:Ouedraogo}
+\chead{ID NUMBER: 12113865}
+
+\hfill
+\vspace{7cm}
+
+\begin{center}
+
+\LARGE{{\bf INVESTMENT AND OECD IN ECONOMIC GROWTH}} \\
+\Large{{\bf Applied Econometrics  take-home exam}}\\
+
+\vspace{5cm}
+
+\vspace{8cm}
+
+\Large{{\bf Deadline}: December 29, 11h59pm [Paris time]}\\
+
+\end{center}
+
+\hfill
+\vspace{5cm}
+
+\newpage
+\setcounter{page}{1}
+
+\section*{Abstract}
+
+This article examines the impact of public investment and integration into the OECD on the increase in per capita GDP using an augmented Solow model. The methodology employed is based on the framework developed by Durlauf and Johnson (1995). Tests are conducted using a dataset comprising 75 countries (both OECD and non-OECD). The various regressions confirm that public investment and education play a crucial role in economic growth, as well as the economic integration into the OECD, albeit to a lesser extent.
+
+\section*{Research Question}
+This exercise follows a substantial body of literature on human capital and its impact on economic growth. We aim to understand the effect of the average investment ratio (including public investment) to GDP from 1960 to 1985 (as a percentage) on the variation in the logarithmic transformation of Average growth rate of per capita GDP from 1960 to 1985 (in percent), according to oecd membership. We have made this choice because this article is based on the Solow model in the Cobb Douglas form : \[Y(t) = K(t)^{\alpha} H(t)^{\beta}\]
+
+Firstly, many models within the new theory of 'endogenous growth' attribute sustained and influenceable growth to positive externalities of human capital and constant or increasing returns to production through the education system. Secondly, the 'neoclassical revival' has focused on measuring the impact of human capital based on an extended version of Solow's 'exogenous growth' model.
+
+In his 1956 article, Solow demonstrates that two variables considered exogenous, the savings rate and population growth, determine the level of income per capita in the steady state. This is because savings and population growth vary among countries, leading to different long-term equilibriums. The Solow model provides easily testable conclusions: higher savings rates result in wealthier countries, while higher population growth leads to poorer countries.
+
+In their 1995 article 'Multiple Regimes and Cross-Country Growth Behavior' published in the Journal of Applied Econometrics, Steven N. Durlauf and Paul A. Johnson present new evidence on the growth rate behavior among countries. We reject the commonly used linear model for studying cross-country growth behavior in favor of an alternative with multiple regimes, where different economies follow different linear models when grouped based on initial conditions. Additionally, the marginal product of capital varies with the level of economic development. These findings align with growth models that exhibit multiple stable states. Our results challenge the deductions favoring the convergence hypothesis and suggest that the explanatory power of the Solow growth model could be enhanced by a theory of differences in the aggregate production function."
+
+\section*{Data}
+
+To carry out this exercise, we will utilize the 'GrowthDJ' database (cross sectional database) from the AER package. This is a growth regression database provided by Durlauf and Johnson (1995). We choose to include countries with higher-quality data (inter=="yes") and those that do not produce oil (oil=="no"). This reduces our database from 121 to 75 observations. Subsequently, we transform the OECD variable into a binary variable.
+
+
+\begin{lstlisting}
+  #Load the database
+help(package="AER")
+data("GrowthDJ", package = "AER")
+str(GrowthDJ)
+head(GrowthDJ)
+#Database transformation
+Growthtest <- GrowthDJ[GrowthDJ$oil == "no" & GrowthDJ$inter == "yes", ]
+#Transformation of the "ocde" variable into a binary indicator variable
+Growthtest$oecd <- ifelse(Growthtest$oecd=="yes",1, 0) 
+head(Growthtest)
+# Filter observations according to specified criteria
+Growthtest <- GrowthDJ[GrowthDJ$oil == "no" & GrowthDJ$inter == "yes", ]
+crosstab(Growthtest$oil, Growthtest$oecd, prop.r = TRUE, prop.c = TRUE, prop.t = TRUE)
+head(Growthtest)
+
+\end{lstlisting}
+ 
+ We proceed to some descriptive statistics.First, the correlation matrix
+
+\begin{lstlisting}
+# Select numerical columns only
+numerical_columns <- sapply(Growthtest, is.numeric)
+numeric_data <- Growthtest[, numerical_columns]
+# Delete rows with missing values
+numeric_data <- na.omit(numeric_data)
+# Calculate the correlation matrix
+cor_matrix <- cor(numeric_data)
+# Display a correlation graph
+corrplot(cor_matrix, method = "number")
+\end{lstlisting}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.35\linewidth]{Rplot01.png}
+  \caption{Matrice de correlation}
+  \label{fig:Rrplot01}
+\end{figure}
+
+We will do OLS estimation using "gdpgrowth" as the dependant variable, with "invest" and "oecd" as independent variables, and "oecd" as an indicator variable. Assuming that the model is linear, we consider three regression models in the first table : model 1 (One regressor), model 2 (Two regressors), model 3 (Two regressors with regression term )
+
+\begin{equation}
+\text{gdpgrowth} = \beta_0 + \beta_1 \cdot\text{invest} + \beta_2 \cdot \text{oecd} + u_i
+\end{equation}
+\begin{equation}
+\text{gdpgrowth} = \beta_0 + \beta_1 \cdot\text{invest} + \beta_2 \cdot \text{oecd} + u_i
+\end{equation}
+\begin{equation}
+\text{gdpgrowth} = \beta_0 + \beta_1 \cdot\text{invest} + \beta_2 \cdot \text{oecd} +  \beta_3 \cdot \text{invest} \cdot \text{oecd} + u_i
+\end{equation}
+\\
+In order to respect the Cobb Douglas form of the human capital literature, and for the sake of variable adjustment, a logarythmic transformation will be performed on "gdpgrowth" and "invest". The regression models should be non linear. We consider two regression model in the second table : model 1 (One regressor), model 2 (Two regressors).
+
+\begin{equation}
+\log(\text{gdpgrowth}) = \beta_0 + \beta_1 \log(\text{invest}) + u_i
+\end{equation}
+\begin{equation}
+\log(\text{gdpgrowth}) = \beta_0 + \beta_1 \log(\text{invest}) + \beta_2 \cdot \text{oecd} + u_i
+\end{equation}
+
+\begin{lstlisting}
+#Regression models
+
+model1 <- lm(gdpgrowth ~ invest, data = Growthtest)
+model2 <- lm(gdpgrowth ~ invest + oecd, data = Growthtest)
+model3 <- lm(gdpgrowth ~ invest + oecd + invest * oecd, data = Growthtest)
+
+model4 <- lm(log(gdpgrowth) ~ log(invest), data = Growthtest)
+model5 <- lm(log(gdpgrowth) ~ log(invest) + oecd, data = Growthtest)
+
+# Utilisation de stargazer pour afficher les résultats
+library(stargazer)
+stargazer(model1, model2, model3, title = "Linear regressions", align = TRUE)
+stargazer(model4, model5, title = "Non linear Regressions", align = TRUE)
+\end{lstlisting}
+
+\section*{Results}
+
+In Table 1, $\beta_1$ is consistently and significantly positive. The increase in the average investment rate in GDP thus has a positive effect on GDP growth. In Equation (3), this positive effect is independent of OECD membership ($\beta_3$ is not significant). $\beta_2$ is significantly negative in Equation (2) but not significant in Equation (3). OECD membership would have a negative effect on GDP growth but is not significant when considering an interaction between public investment and OECD.
+\begin{itemize}
+    \item (2): The introduction of the "oecd" variable improves the significance of the "invest" variable, with $R^2$ being higher in (2) than in (1). Therefore, (2) is better than (1).
+    \item (3): The introduction of the interaction term nullifies the significance of the "ocde" variable and increases the effect of the "invest" variable. $R^2$ is slightly lower in (3) than in (2).
+\end{itemize}
+In Table 2, $\beta_1$ is the elasticity, i.e., the impact of a change in the "invest" variable on the dependent variable "gdpgrowth." For example, with $\beta_1 = 0.27$, a 1\% variation in the average investment rate (including public investment) relative to GDP from 1960 to 1985 (in percentage) leads to a 27\% variation in the average GDP growth rate per capita from 1960 to 1985 (in percentage).
+$\beta_1$ is always positive, while $\beta_2$ is negative. The introduction of the control variable "oecd" improves the coefficient of "invest" as well as $R^2$. Model (5) is more efficient than (4).
+We choose the last model (5). For $\beta_2 = -0.323$, OECD membership is associated with a negative variation of 32.3\% in the average GDP growth rate per capita from 1960 to 1985 (in percentage).
+
+Then, let's make some tests on this model :
+\subsection*{Homoscedasticity test}
+We test the homoscedasticity assumption of model (5) using the Breusch-Pagan test, where the null hypothesis (H0) asserts that the variance of errors is constant (homoscedasticity), and the alternative hypothesis (H1) posits that the variance of errors is not constant (heteroscedasticity). With a p-value greater than 0.1, we do not reject the null hypothesis H0. Therefore, homoscedasticity is present. Robust standard errors are not needed since log gdpgrowth is homoscedastic 
+\begin{lstlisting}
+# Breusch-Pagan test ----
+# Regression for Breusch-Pagan test
+model_BP <- lm(uhat1sq ~ log(invest) + oecd, Growthtest)
+summary(model_BP)
+\end{lstlisting}
+
+\begin{figure}[h]
+  \includegraphics[width=0.5\linewidth]{Show.png}
+  \caption{Breusch Pagan Test}
+  \label{fig:label_figure}
+\end{figure}
+\subsection*{Residual Autocorrelation}
+We test the autocorrelation of residuals using the Durbin-Watson test. The general rule is that if the DW statistic is close to 2, there is little evidence of autocorrelation. If it is significantly below 2 (towards 0), there is positive autocorrelation, and if it is significantly above 2 (towards 4), there is negative autocorrelation. To interpret the results of the Durbin-Watson test in R, examine the p-value associated with the test. If the p-value is greater than a significance threshold (e.g., 0.05), you do not reject the null hypothesis H0 of no autocorrelation of residuals.
+With a p-value greater than 0.1, we can conclude that the errors are independent. This normal because residuals autocorrelation is generally associated with pannel data or time series.
+\begin{lstlisting}
+# Appliquer le test de Durbin-Watson
+dw_test <- dwtest(model5)
+# Afficher les résultats du test
+print(dw_test)
+\end{lstlisting}
+
+
+\begin{figure}[h]
+  \includegraphics[width=0.8\linewidth]{Auto.png}
+  \caption{Durbin Watson Test}
+  \label{fig:label_figure}
+\end{figure}
+\begin{table}[!htbp]
+
+ \centering 
+  \caption{OLS regressions + Logarithmic Transformation + Control variables} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{4pt}}lD{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} } 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{3}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-4} 
+\\[-1.8ex] & \multicolumn{3}{c}{gdpgrowth} \\ 
+\\[-1.8ex] & \multicolumn{1}{c}{(1)} & \multicolumn{1}{c}{(2)} & \multicolumn{1}{c}{(3)}\\ 
+\hline \\[-1.8ex] 
+ invest & 0.050^{*} & 0.107^{***} & 0.118^{***} \\ 
+  & (0.026) & (0.029) & (0.032) \\ 
+  & & & \\ 
+ oecd &  & -1.697^{***} & -0.103 \\ 
+  &  & (0.483) & (1.917) \\ 
+  & & & \\ 
+ invest*oecd &  &  & -0.066 \\ 
+  &  &  & (0.077) \\ 
+  & & & \\ 
+ Constant & 3.419^{***} & 2.818^{***} & 2.623^{***} \\ 
+  & (0.544) & (0.534) & (0.582) \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Observations & \multicolumn{1}{c}{75} & \multicolumn{1}{c}{75} & \multicolumn{1}{c}{75} \\ 
+R$^{2}$ & \multicolumn{1}{c}{0.047} & \multicolumn{1}{c}{0.186} & \multicolumn{1}{c}{0.195} \\ 
+Adjusted R$^{2}$ & \multicolumn{1}{c}{0.034} & \multicolumn{1}{c}{0.164} & \multicolumn{1}{c}{0.161} \\ 
+Residual Std. Error & \multicolumn{1}{c}{1.707 (df = 73)} & \multicolumn{1}{c}{1.588 (df = 72)} & \multicolumn{1}{c}{1.591 (df = 71)} \\ 
+F Statistic & \multicolumn{1}{c}{3.600$^{*}$ (df = 1; 73)} & \multicolumn{1}{c}{8.252$^{***}$ (df = 2; 72)} & \multicolumn{1}{c}{5.727$^{***}$ (df = 3; 71)} \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table}\\
+
+\begin{table}
+\centering 
+  \caption{OLS Regression + Logarithmic Transformation + Contol variables} 
+  \label{} 
+  
+\begin{tabular}{@{\extracolsep{5pt}}lD{.}{.}{-3} D{.}{.}{-3} } 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{2}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-3} 
+\\[-1.8ex] & \multicolumn{2}{c}{log(gdpgrowth)} \\ 
+\\[-1.8ex] & \multicolumn{1}{c}{(1)} & \multicolumn{1}{c}{(2)}\\ 
+\hline \\[-1.8ex] 
+ log(invest) & 0.270^{**} & 0.445^{***} \\ 
+  & (0.110) & (0.123) \\ 
+  & & \\ 
+ oecd &  & -0.323^{***} \\ 
+  &  & (0.119) \\ 
+  & & \\ 
+ Constant & 0.616^{*} & 0.209 \\ 
+  & (0.319) & (0.341) \\ 
+  & & \\ 
+\hline \\[-1.8ex] 
+Observations & \multicolumn{1}{c}{75} & \multicolumn{1}{c}{75} \\ 
+R$^{2}$ & \multicolumn{1}{c}{0.077} & \multicolumn{1}{c}{0.162} \\ 
+Adjusted R$^{2}$ & \multicolumn{1}{c}{0.064} & \multicolumn{1}{c}{0.139} \\ 
+Residual Std. Error & \multicolumn{1}{c}{0.418 (df = 73)} & \multicolumn{1}{c}{0.401 (df = 72)} \\ 
+F Statistic & \multicolumn{1}{c}{6.085$^{**}$ (df = 1; 73)} & \multicolumn{1}{c}{6.973$^{***}$ (df = 2; 72)} \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table}
+\newpage
+\section*{Discussion}
+This exercise is situated within the literature on economic growth, with the Solow model serving as a foundational text. It combines human capital and physical capital as essential foundations for Gross Domestic Product (GDP) growth. In Durlauf et al. (1992), Mankiw, Romer, and Weil build upon the foundations of the Solow model, incorporating the concept of human capital. Two types of capital are thus included: physical capital and human capital.
+We have a Cobb-Douglas function of the form: 
+\[Y(t) = K(t)^{\alpha} H(t)^{\beta} (A(t)L(t))^{1-\alpha-\beta}\]
+Our findings do not contradict the existing literature on the subject. Public investment in GDP enhances economic growth. Established in 1962, the Organisation for Economic Co-operation and Development (OECD) is an international organization aimed at promoting policies to improve the economic and social well-being of people worldwide. Our results reveal that being a part of this organization would have a negative impact on the national GDP growth. This effect can be explained by the fact that OECD member countries already have high GDPs and may find it challenging to achieve extraordinary economic growth rates. This may be contrasted with developing countries that strive to increase their GDP for development purposes.
+Other variables in the dataset, such as education, literacy, or population growth, could also have an impact on GDP growth. Our model adheres to the assumptions of non-autocorrelation and homoscedasticity, so we did not find the need to employ more robust methods, further adjust the model, or use instrumental variables. However, it is crucial to consider the choices we made, such as selecting countries with reliable data and excluding oil-producing countries. Additionally, the time period (1960-1985) had less sophisticated and less precise data compared to today.\\
+
+\section*{Conclusion}
+We have demonstrated that investment in GDP has a positive effect on economic growth, while OECD membership tends to have a negative effect on growth, likely due to the fact that OECD members already have a high per capita GDP. Further studies can be conducted on the subject, justifying their econometric model in various ways. The model used in this document is subject to improvement.\\
+\section*{Bilibiographie}
+Durlauf, S.N., and Johnson, P.A. (1995). Multiple Regimes and Cross-Country Growth Behavior. Journal of Applied Econometrics\\
+Koenker, R., and Zeileis, A. (2009). On Reproducible Econometric Research. Journal of Applied Econometrics\\
+Mankiw, N.G, Romer, D., and Weil, D.N. (1992). A Contribution to the Empirics of Economic Growth. Quarterly Journal of Economics\\
+Masanjala, W.H., and Papageorgiou, C. (2004). The Solow Model with CES Technology: Nonlinearities and Parameter Heterogeneity. Journal of Applied Econometrics\\
+Education, investissement public et croissance en Europe : une étude en panel, Gwenaëlle Poilon
+\\
+
+\newpage
+\section*{Annexes}
+Graphics
+\begin{lstlisting}
+#Regression graphics
+plot(model5)
+hist(Growthtest$gdpgrowth)
+
+model_1 <- lm(log(gdpgrowth) ~ log(invest) + oecd, Growthtest)
+summary(model_1)
+Growthtest %<>% mutate(gdpgrowthhat1 = fitted(model_1))
+ggplot(Growthtest, aes(x = invest)) +
+  theme_bw() +
+  geom_point(aes(y = gdpgrowth, col = 'gdpgrowth')) +
+  geom_point(aes(y = gdpgrowthhat1, col = 'linear predictor'))
+
+# Graph of residuals against independent variable
+ggplot(Growthtest) + 
+  theme_bw() + 
+  geom_point(aes(x = log(invest), y = uhat1)) +
+  geom_hline(yintercept = 0, col = 'red') + 
+  labs(y = 'Residuals', x = 'Log(invest)')
+
+# Graph of residuals against fitted values
+Growthtest %<>% mutate(yhat1 = fitted(model_1))
+ggplot(data = Growthtest, mapping = aes(x = yhat1, y = uhat1)) + 
+  theme_bw() +
+  geom_point() +
+  geom_hline(yintercept = 0, col = 'red') + 
+  labs(y = 'Residuals', x = 'Fitted values')
+\end{lstlisting}
+
+\begin{figure}[h]
+  \includegraphics[width=1.0\linewidth]{Rplot04.png}
+  \caption{Linear regression}
+  \label{fig:label_figure}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[width=1.0\linewidth]{Rplot05.png}
+  \caption{Linear regression}
+  \label{fig:label_figure}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[width=1.0\linewidth]{Rplot07.png}
+  \caption{Linear regression}
+  \label{fig:label_figure}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[width=1.0\linewidth]{Rplot08.png}
+  \caption{Linear regression}
+  \label{fig:label_figure}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[width=1.0\linewidth]{Rplot09.png}
+  \caption{Linear regression}
+  \label{fig:label_figure}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[width=1.0\linewidth]{Rplot10.png}
+  \caption{Linear regression}
+  \label{fig:label_figure}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[width=1.0\linewidth]{Rplot12.png}
+  \caption{Linear regression}
+  \label{fig:label_figure}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[width=1.0\linewidth]{Rplot13.png}
+  \caption{Linear regression}
+  \label{fig:label_figure}
+\end{figure}
+
+\end{document}
+
+
